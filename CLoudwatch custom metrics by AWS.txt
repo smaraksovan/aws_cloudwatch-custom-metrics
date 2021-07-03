@@ -1,0 +1,142 @@
+
+=============================
+Installation Process Overview
+=============================
+    
+   You can download and install the CloudWatch agent manually using the command line, or you can integrate it with SSM. The general flow of installing the CloudWatch agent using either method is as follows:
+
+   -Create IAM roles or users that enable the agent to collect metrics from the server and optionally to integrate with AWS Systems Manager.
+
+   -Download the agent package.
+
+   -Modify the CloudWatch agent configuration file and specify the metrics that you want to collect.
+
+   -Install and start the agent on your servers. As you install the agent on an EC2 instance, you attach the IAM role that you created in step 1. As you install the agent on an on-premises server, you specify a named profile that contains the credentials of the IAM user that you created in step 1.
+
+=============================
+Installation Process Steps :
+=============================
+======
+Step 1: To create the IAM role necessary to run the CloudWatch agent on EC2 instances
+======
+  - Sign in to the AWS Management Console and open the IAM console at https://console.aws.amazon.com/iam/
+
+  - In the navigation pane on the left, choose Roles and then Create role.
+
+  - For Choose the service that will use this role, choose EC2 Allows EC2 instances to call AWS services on your behalf. Choose Next: Permissions.
+
+  - In the list of policies, select the check box next to CloudWatchAgentServerPolicy. If necessary, use the search box to find the policy.
+
+  - Choose Next: Review.
+
+  - Confirm that CloudWatchAgentServerPolicy appears next to Policies. In Role name, enter a name for the role, such as CloudWatchAgentServerRole. Optionally give it a description. Then choose Create role.
+
+  - The role is now created.
+
+=======
+ Step 2: Download the CloudWatch agent. 
+=======
+	- Download the CloudWatch agent.
+
+	  You can use an Amazon S3 download link to download the CloudWatch agent package depending on your architecture and platform. 
+	  Please refer this link to get the appropriate package's link : https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/download-cloudwatch-agent-commandline.html#download-CloudWatch-Agent-on-EC2-Instance-commandline-first
+
+	 - On a Linux server, enter the following. For download-link, use the appropriate download link from the previous table.
+
+	   command : $ wget <download-link>
+
+	 - On a server running Windows Server, download the following file :
+
+	 	https://s3.amazonaws.com/amazoncloudwatch-agent/windows/amd64/latest/amazon-cloudwatch-agent.msi
+
+	 - Install the package. 
+
+	 If you downloaded an RPM package on a Linux server, change to the directory containing the package and enter the following:
+
+		command : $ sudo rpm -U ./amazon-cloudwatch-agent.rpm
+
+	 If you downloaded a DEB package on a Linux server, change to the directory containing the package and enter the following:
+
+		command : $ sudo dpkg -i -E ./amazon-cloudwatch-agent.deb
+
+     If you downloaded an MSI package on a server running Windows Server, change to the directory containing the package and enter the following:
+
+		command : msiexec /i amazon-cloudwatch-agent.msi
+
+=======
+ Step 3: Create the CloudWatch Agent Configuration File with the Wizard 
+=======
+
+	 * The wizard is configured with predefined sets of metrics, with different detail levels. These sets of metrics are shown in the following tables. For more information about these metrics, see Metrics Collected by the CloudWatch Agent. 
+
+     -To create the CloudWatch agent configuration file. Start the CloudWatch agent configuration wizard by entering the following:
+
+     command : $ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-config-wizard
+
+			   On a server running Windows Server, enter the following:
+
+				cd "C:\Program Files\Amazon\AmazonCloudWatchAgent"
+				amazon-cloudwatch-agent-config-wizard.exe
+
+	- Answer the questions to customize the configuration file for your server.
+
+	- You would have to give the location of your log file here in this wizard and then the agent will start picking them from the mentioned location in your case 
+
+	- If you're storing the configuration file locally, the configuration file config.json is stored in /opt/aws/amazon-cloudwatch-agent/bin/ on Linux servers, and is stored in C:\Program Files\Amazon\AmazonCloudWatchAgent on Windows Server.
+
+=======
+ Step 4:Start the CloudWatch Agent Using the Command Line
+=======
+
+	 Follow these steps to use the command line to start the CloudWatch agent on a server.
+
+     - On an EC2 instance running Linux, enter the following command. Replace configuration-file-path with the path to the agent configuration file. This file is called config.json is you created it with the wizard,
+
+	   command : $ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:configuration-file-path -s
+
+       example : $ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json -s
+
+	 - On an EC2 instance running Windows Server, enter the following from the PowerShell console:
+
+		& "C:\Program Files\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent-ctl.ps1" -a fetch-config -m ec2 -c file:configuration-file-path -s
+
+	 - On an on-premises server running Windows Server, enter the following from the PowerShell console:
+
+	   & "C:\Program Files\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent-ctl.ps1" -a fetch-config -m onPremise -c file:configuration-file-path -s
+
+=======
+ Step 5: Verification
+=======
+ 
+     - Check that the agent is running with the following command:
+
+	   command : $ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a status
+
+
+	 - Additionally kindly verify that your instance has the connectivity to the monitoring and logs endpoint from within the instance. 
+ 
+  		 https://monitoring.us-east-1.amazonaws.com
+  		 https://logs.us-east-1.amazonaws.com
+
+  		 Commands :
+
+  		 $ telnet monitoring.us-east-1.amazonaws.com 443
+
+  		 $ telnet logs.us-east-1.amazonaws.com 443
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  	 
+===========
+References :
+===========
+[1] https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Install-CloudWatch-Agent.html
+
+[2] https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/installing-cloudwatch-agent-commandline.html
+
+[3] https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/metrics-collected-by-CloudWatch-agent.html
+
+
+
+
